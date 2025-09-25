@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pay Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bitcount+Prop+Double+Ink:wght@100..900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Simple spinner for loading state */
+    .spinner {
+      border: 2px solid rgba(0,0,0,0.1);
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border-left-color: #fb7185; /* rose-400 */
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+h1 {
+font-family: "Bitcount Prop Double Ink", system-ui;
+}
+
+  </style>
+</head>
+<body class="bg-rose-50 text-rose-800">
+
+  <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <h1 class="text-7xl font-bold text-rose-700 text-center mb-6">Pay Calculator</h1>
+
+    <!-- Controls for month and year selection -->
+<div class="flex flex-wrap justify-center items-end gap-x-4 gap-y-2 mb-6 bg-white p-4 rounded-lg shadow-sm">
+  <!-- Month -->
+  <div class="flex flex-col">
+    <label for="month" class="text-sm font-medium text-rose-600 mb-1">Month:</label>
+    <select id="month" onchange="generateCalendar()" class="w-40 py-2 border border-rose-200 rounded-md 
+             focus:outline-none focus:ring-1 focus:ring-rose-400 focus:border-rose-400 sm:text-sm">
+    </select>
+  </div>
+
+  <!-- Year -->
+  <div class="flex flex-col">
+    <label for="year" class="text-sm font-medium text-rose-600 mb-1">Year:</label>
+    <select id="year" onchange="generateCalendar()" class="w-40 py-2 border border-rose-200 rounded-md 
+             focus:outline-none focus:ring-1 focus:ring-rose-400 focus:border-rose-400 sm:text-sm">
+    </select>
+  </div>
+
+  <!-- Pay Period -->
+  <div class="flex flex-col">
+    <label for="payPeriod" class="text-sm font-medium text-rose-600 mb-1">Pay Period:</label>
+    <select id="payPeriod" onchange="generateCalendar()" class="w-40 py-2 border border-rose-200 rounded-md 
+             focus:outline-none focus:ring-1 focus:ring-rose-400 focus:border-rose-400 sm:text-sm">
+      <option value="full">Full Month</option>
+      <option value="cutoff1">Cutoff 1 (1-15)</option>
+      <option value="cutoff2">Cutoff 2 (16-EOM)</option>
+    </select>
+  </div>
+
+  <!-- Employee Name -->
+  <div class="flex flex-col">
+    <label for="employeeName" class="text-sm font-medium text-rose-600 mb-1">Employee Name:</label>
+    <input type="text" id="employeeName" placeholder="Your Name" class="w-40 p-2 border border-rose-200 rounded-md 
+             focus:ring-1 focus:ring-rose-400 focus:border-rose-400 sm:text-sm focus:outline-none">
+  </div>
+
+  <!-- Rest Days -->
+  <div class="flex flex-col">
+    <label class="text-sm font-medium text-rose-600 mb-1">Rest Days:</label>
+    <div class="flex flex-wrap gap-2">
+      <label class="text-xs flex items-center gap-1">
+        <input type="checkbox" onchange="updateRestDays()"
+          class="rest-day-cb h-4 w-4 rounded border-rose-300 text-rose-500 focus:ring-rose-400" value="Sun">Sun
+      </label>
+      <label class="text-xs flex items-center gap-1">
+        <input type="checkbox" onchange="updateRestDays()"
+          class="rest-day-cb h-4 w-4 rounded border-rose-300 text-rose-500 focus:ring-rose-400" value="Mon">Mon
+      </label>
+      <label class="text-xs flex items-center gap-1">
+        <input type="checkbox" onchange="updateRestDays()"
+          class="rest-day-cb h-4 w-4 rounded border-rose-300 text-rose-500 focus:ring-rose-400" value="Tue">Tue
+      </label>
+      <label class="text-xs flex items-center gap-1">
+        <input type="checkbox" onchange="updateRestDays()"
+          class="rest-day-cb h-4 w-4 rounded border-rose-300 text-rose-500 focus:ring-rose-400" value="Wed">Wed
+      </label>
+      <label class="text-xs flex items-center gap-1">
+        <input type="checkbox" onchange="updateRestDays()"
+          class="rest-day-cb h-4 w-4 rounded border-rose-300 text-rose-500 focus:ring-rose-400" value="Thu">Thu
+      </label>
+      <label class="text-xs flex items-center gap-1">
+        <input type="checkbox" onchange="updateRestDays()"
+          class="rest-day-cb h-4 w-4 rounded border-rose-300 text-rose-500 focus:ring-rose-400" value="Fri">Fri
+      </label>
+      <label class="text-xs flex items-center gap-1">
+        <input type="checkbox" onchange="updateRestDays()"
+          class="rest-day-cb h-4 w-4 rounded border-rose-300 text-rose-500 focus:ring-rose-400" value="Sat">Sat
+      </label>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex flex-col">
+    <label class="text-sm font-medium text-transparent select-none mb-1">Actions</label>
+    <div class="flex items-center gap-2">
+      <button onclick="handleRecalculateClick(this)"
+        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md shadow-sm text-white bg-rose-500 hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500">
+        Recalculate & Save
+      </button>
+      <button onclick="showConfirmationModal()"
+        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md shadow-sm text-rose-700 bg-white border border-rose-300 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400">
+        Clear Month's Data
+      </button>
+    </div>
+  </div>
+</div>
+
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Rates section -->
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+            <h2 class="text-lg font-bold text-rose-700 mb-4 border-b pb-2">Rates</h2>
+            <div class="flex flex-wrap gap-4">
+                <div>
+                    <label for="exchangeRate" class="block text-sm font-medium text-rose-600">USD to PHP Rate:</label>
+                    <input type="number" id="exchangeRate" step="0.01" value="58.70" onchange="updateExchangeRate()" class="mt-1 w-40 p-1.5 border border-rose-200 rounded-md focus:ring-1 focus:ring-rose-400 focus:border-rose-400">
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <div>
+                        <label for="regularRate" class="block text-sm font-medium text-rose-600">Regular Rate ($):</label>
+                        <input type="number" id="regularRate" step="0.01" value="4.00" onchange="updateSettings()" class="mt-1 w-24 p-1.5 border border-rose-200 rounded-md focus:ring-1 focus:ring-rose-400 focus:border-rose-400">
+                    </div>
+                    <div>
+                        <label for="premiumRate" class="block text-sm font-medium text-rose-600">Premium Rate ($):</label>
+                        <input type="number" id="premiumRate" step="0.01" value="5.00" onchange="updateSettings()" class="mt-1 w-24 p-1.5 border border-rose-200 rounded-md focus:ring-1 focus:ring-rose-400 focus:border-rose-400">
+                    </div>
+                    <div>
+                        <label for="otMultiplier" class="block text-sm font-medium text-rose-600">OT Multiplier:</label>
+                        <input type="number" id="otMultiplier" step="0.1" value="1.2" onchange="updateSettings()" class="mt-1 w-24 p-1.5 border border-rose-200 rounded-md focus:ring-1 focus:ring-rose-400 focus:border-rose-400">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Pay Period Summary -->
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+            <h2 class="text-lg font-bold text-rose-700 mb-4 border-b pb-2">Pay Period Summary</h2>
+             <div class="space-y-3">
+                 <div class="flex justify-between items-center">
+                    <div class="text-lg font-semibold text-rose-700">
+                        Cutoff 1 (1–15): $<span id="cutoff1">0.00</span>
+                        <span class="text-sm font-normal text-rose-500 ml-2">(₱<span id="cutoff1_php">0.00</span>)</span>
+                    </div>
+                    <button onclick="downloadPayslip(1)" class="ml-4 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-rose-400 hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400">Download</button>
+                 </div>
+                 <div class="flex justify-between items-center">
+                    <div class="text-lg font-semibold text-rose-700">
+                        Cutoff 2 (16–EOM): $<span id="cutoff2">0.00</span>
+                        <span class="text-sm font-normal text-rose-500 ml-2">(₱<span id="cutoff2_php">0.00</span>)</span>
+                    </div>
+                    <button onclick="downloadPayslip(2)" class="ml-4 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-rose-400 hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400">Download</button>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Main pay table with horizontal scroll on small screens -->
+    <div class="overflow-x-auto shadow-md rounded-lg">
+      <table id="payTable" class="w-full divide-y divide-rose-100 bg-white">
+        <thead class="bg-rose-100">
+          <tr>
+            <th class="px-2 py-3 text-center text-xs font-semibold text-rose-500 uppercase tracking-wider">Date</th>
+            <th class="px-2 py-3 text-center text-xs font-semibold text-rose-500 uppercase tracking-wider">Day</th>
+            <th class="px-2 py-3 text-center text-xs font-semibold text-rose-500 uppercase tracking-wider">Shift</th>
+            <th class="px-2 py-3 text-center text-xs font-semibold text-rose-500 uppercase tracking-wider">Lunch</th>
+            <th class="px-2 py-3 text-center text-xs font-semibold text-rose-500 uppercase tracking-wider">OT</th>
+            <th class="px-2 py-3 text-center text-xs font-semibold text-rose-500 uppercase tracking-wider">Reg. Pay</th>
+            <th class="px-2 py-3 text-center text-xs font-semibold text-rose-500 uppercase tracking-wider">Prem. Pay</th>
+            <th class="px-2 py-3 text-center text-xs font-semibold text-rose-500 uppercase tracking-wider">OT Pay</th>
+            <th class="px-2 py-3 text-center text-xs font-semibold text-rose-500 uppercase tracking-wider">Total</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-rose-100">
+            <!-- Calendar rows will be generated here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Confirmation Modal -->
+  <div id="confirmationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="mt-3 text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Clear Month's Data</h3>
+        <div class="mt-2 px-7 py-3">
+          <p class="text-sm text-gray-500">Are you sure you want to delete all entries for the selected month? This action cannot be undone.</p>
+        </div>
+        <div class="items-center px-4 py-3">
+          <button id="confirmClearBtn" onclick="confirmClearMonthData()" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-auto shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+            Yes, Clear Data
+          </button>
+          <button id="cancelClearBtn" onclick="hideConfirmationModal()" class="px-4 py-2 ml-3 bg-gray-200 text-gray-700 text-base font-medium rounded-md w-auto shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // --- CONFIGURATION ---
+    const PREMIUM_START_HOUR = 22; // 10 PM
+
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+      loadInitialSettings();
+      document.getElementById('employeeName').addEventListener('change', (e) => {
+          localStorage.setItem('employeeName', e.target.value);
+      });
+      setupSelectors();
+      generateCalendar();
+    });
+
+    /**
+     * Loads all saved settings from localStorage on page load.
+     */
+    function loadInitialSettings() {
+        const settings = {
+            exchangeRate: '58.70',
+            employeeName: '',
+            regularRate: '4.00',
+            premiumRate: '5.00',
+            otMultiplier: '1.2',
+        };
+        for (const key in settings) {
+            const savedValue = localStorage.getItem(key);
+            if (savedValue) {
+                document.getElementById(key).value = savedValue;
+            } else {
+                 document.getElementById(key).value = settings[key];
+            }
+        }
+        
+        // Load rest days
+        const savedRestDays = JSON.parse(localStorage.getItem('restDays'));
+        const defaultRestDays = ['Sun', 'Sat'];
+        const restDaysToSet = savedRestDays || defaultRestDays;
+
+        document.querySelectorAll('.rest-day-cb').forEach(checkbox => {
+            checkbox.checked = restDaysToSet.includes(checkbox.value);
+        });
+
+        if (!savedRestDays) {
+            localStorage.setItem('restDays', JSON.stringify(defaultRestDays));
+        }
+    }
+    
+    /**
+     * Saves selected rest days and regenerates the calendar.
+     */
+    function updateRestDays() {
+        const selectedDays = [];
+        document.querySelectorAll('.rest-day-cb:checked').forEach(checkbox => {
+            selectedDays.push(checkbox.value);
+        });
+        localStorage.setItem('restDays', JSON.stringify(selectedDays));
+        generateCalendar();
+    }
+
+    /**
+     * Populates the month and year dropdown selectors.
+     */
+    function setupSelectors() {
+      const monthSelect = document.getElementById("month");
+      const yearSelect = document.getElementById("year");
+      const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+
+      months.forEach((m, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = m;
+        if (i === currentMonth) opt.selected = true;
+        monthSelect.appendChild(opt);
+      });
+
+      for (let y = currentYear - 2; y <= currentYear + 5; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        if (y === currentYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }
+    }
+
+    /**
+     * Sets a default time in an input field when it's focused and empty.
+     */
+    function setDefaultTime(element) {
+        if (!element.value) {
+            element.value = '00:00';
+        }
+    }
+
+    /**
+     * Generates the calendar table rows for the selected month and year.
+     */
+    function generateCalendar() {
+      const month = parseInt(document.getElementById("month").value);
+      const year = parseInt(document.getElementById("year").value);
+      const payPeriod = document.getElementById('payPeriod').value;
+      const tbody = document.querySelector("#payTable tbody");
+      tbody.innerHTML = `<tr><td colspan="9" class="text-center p-8"><div class="spinner mx-auto"></div></td></tr>`;
+      
+      const restDays = JSON.parse(localStorage.getItem('restDays')) || ['Sat', 'Sun'];
+
+      // Use a timeout to allow the spinner to render before the main work
+      setTimeout(() => {
+          tbody.innerHTML = "";
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+          for (let d = 1; d <= daysInMonth; d++) {
+            const date = new Date(Date.UTC(year, month, d));
+            const tr = document.createElement("tr");
+            tr.classList.add('hover:bg-rose-200');
+
+            const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+            if (restDays.includes(dayOfWeek)) {
+                tr.classList.add('bg-rose-100/50');
+            }
+
+            // Filter rows based on selected pay period
+            if (payPeriod === 'cutoff1' && d > 15) {
+                tr.style.display = 'none';
+            } else if (payPeriod === 'cutoff2' && d < 16) {
+                tr.style.display = 'none';
+            }
+
+            const inputClasses = "w-full p-1 border border-rose-200 rounded-md focus:ring-1 focus:ring-rose-400 focus:border-rose-400 text-xs";
+            const dateString = date.toISOString().split('T')[0];
+            tr.innerHTML = `
+              <td class="px-2 py-3 whitespace-nowrap text-sm font-medium text-rose-900">${dateString}</td>
+              <td class="px-2 py-3 whitespace-nowrap text-sm text-rose-500">${date.toLocaleDateString('en-US',{weekday:'long', timeZone: 'UTC'})}</td>
+              <td class="px-2 py-3"><div class="flex flex-col gap-1.5">
+                <input type="time" class="${inputClasses}" onfocus="setDefaultTime(this)" onchange="updateRow(${year},${month},${d})">
+                <input type="time" class="${inputClasses}" onfocus="setDefaultTime(this)" onchange="updateRow(${year},${month},${d})">
+              </div></td>
+              <td class="px-2 py-3"><div class="flex flex-col gap-1.5">
+                <input type="time" class="${inputClasses}" onfocus="setDefaultTime(this)" onchange="updateRow(${year},${month},${d})">
+                <input type="time" class="${inputClasses}" onfocus="setDefaultTime(this)" onchange="updateRow(${year},${month},${d})">
+              </div></td>
+              <td class="px-2 py-3"><div class="flex flex-col gap-1.5">
+                <input type="time" class="${inputClasses}" onfocus="setDefaultTime(this)" onchange="updateRow(${year},${month},${d})">
+                <input type="time" class="${inputClasses}" onfocus="setDefaultTime(this)" onchange="updateRow(${year},${month},${d})">
+              </div></td>
+              <td class="px-2 py-3 text-right text-sm text-rose-600 font-mono reg">0.00</td>
+              <td class="px-2 py-3 text-right text-sm text-rose-600 font-mono prem">0.00</td>
+              <td class="px-2 py-3 text-right text-sm text-rose-600 font-mono ot">0.00</td>
+              <td class="px-2 py-3 text-right text-sm text-rose-900 font-semibold font-mono total">0.00</td>
+            `;
+
+            tbody.appendChild(tr);
+            loadData(year, month, d, tr);
+          }
+          calculateAllTotals();
+      }, 10);
+    }
+    
+    /**
+     * Updates a single row's calculations and saves its data.
+     */
+    function updateRow(year, month, day) {
+        const tbody = document.querySelector("#payTable tbody");
+        const dayIndex = Array.from(tbody.children).findIndex(row => {
+            const dateCell = row.querySelector('td:first-child');
+            return dateCell && new Date(dateCell.textContent).getUTCDate() === day;
+        });
+
+        if (dayIndex === -1) return;
+        const row = tbody.children[dayIndex];
+
+        const inputs = row.querySelectorAll("input[type='time']");
+        const timeIn = inputs[0].value, timeOut = inputs[1].value;
+        const lunchIn = inputs[2].value, lunchOut = inputs[3].value;
+        const otIn = inputs[4].value, otOut = inputs[5].value;
+        
+        const regularRate = parseFloat(document.getElementById('regularRate').value) || 0;
+        const premiumRate = parseFloat(document.getElementById('premiumRate').value) || 0;
+        const otMultiplier = parseFloat(document.getElementById('otMultiplier').value) || 0;
+
+        const { regularHours, premiumHours } = calculateWorkHours(timeIn, timeOut, lunchIn, lunchOut);
+        const otHoursData = calculateWorkHours(otIn, otOut, null, null); // No lunch break for OT
+        const otHours = otHoursData.regularHours + otHoursData.premiumHours;
+
+        const regPay = regularHours * regularRate;
+        const premPay = premiumHours * premiumRate;
+        const otPay = otHours * regularRate * otMultiplier;
+        const total = regPay + premPay + otPay;
+
+        row.querySelector(".reg").textContent = regPay.toFixed(2);
+        row.querySelector(".prem").textContent = premPay.toFixed(2);
+        row.querySelector(".ot").textContent = otPay.toFixed(2);
+        row.querySelector(".total").textContent = total.toFixed(2);
+
+        const key = `paydata-${year}-${month}-${day}`;
+        localStorage.setItem(key, JSON.stringify({ timeIn, timeOut, lunchIn, lunchOut, otIn, otOut }));
+
+        calculateAllTotals();
+    }
+
+
+    /**
+     * Calculates worked hours, splitting them into regular and premium categories based on PHT.
+     */
+    function calculateWorkHours(startStr, endStr, lunchStartStr, lunchEndStr) {
+        if (!startStr || !endStr) return { regularHours: 0, premiumHours: 0 };
+
+        // Helper to create a date object in PHT (UTC+8) regardless of browser's timezone
+        const createPHTDate = (timeStr) => new Date(`2000-01-01T${timeStr}:00+08:00`);
+
+        let start = createPHTDate(startStr);
+        let end = createPHTDate(endStr);
+        // Handle overnight shifts
+        if (end.getTime() <= start.getTime()) {
+            end.setUTCDate(end.getUTCDate() + 1);
+        }
+
+        let lunchStart, lunchEnd;
+        if (lunchStartStr && lunchEndStr) {
+            lunchStart = createPHTDate(lunchStartStr);
+            lunchEnd = createPHTDate(lunchEndStr);
+            if (lunchEnd.getTime() <= lunchStart.getTime()) {
+                lunchEnd.setUTCDate(lunchEnd.getUTCDate() + 1);
+            }
+        }
+
+        // Premium hours in UTC (10 PM PHT is 14:00 UTC, 1 AM PHT is 17:00 UTC)
+        const PREMIUM_START_HOUR_UTC = 14;
+        const PREMIUM_END_HOUR_UTC = 17;
+
+        let totalMinutes = (end - start) / 60000;
+        let regularHours = 0;
+        let premiumHours = 0;
+
+        for (let i = 0; i < Math.round(totalMinutes); i++) {
+            const currentMinute = new Date(start.getTime() + i * 60000);
+
+            // Skip lunch minutes
+            if (lunchStart && lunchEnd && currentMinute.getTime() >= lunchStart.getTime() && currentMinute.getTime() < lunchEnd.getTime()) {
+                continue;
+            }
+
+            const hourUTC = currentMinute.getUTCHours();
+            
+            // Check if the current hour falls within the premium pay period (10 PM - 1 AM PHT)
+            if (hourUTC >= PREMIUM_START_HOUR_UTC && hourUTC < PREMIUM_END_HOUR_UTC) {
+                premiumHours += 1 / 60;
+            } else {
+                regularHours += 1 / 60;
+            }
+        }
+        return { regularHours, premiumHours };
+    }
+
+    /**
+     * Loads saved data from localStorage for a specific day.
+     */
+    function loadData(year, month, day, row) {
+      const key = `paydata-${year}-${month}-${day}`;
+      const data = JSON.parse(localStorage.getItem(key) || "null");
+      if (data) {
+        const inputs = row.querySelectorAll("input[type='time']");
+        inputs[0].value = data.timeIn || '';
+        inputs[1].value = data.timeOut || '';
+        inputs[2].value = data.lunchIn || '';
+        inputs[3].value = data.lunchOut || '';
+        inputs[4].value = data.otIn || '';
+        inputs[5].value = data.otOut || '';
+        updateRow(year, month, day);
+      }
+    }
+
+    function updateSettings() {
+        const settingsToSave = ['regularRate', 'premiumRate', 'otMultiplier'];
+        settingsToSave.forEach(settingId => {
+            const value = document.getElementById(settingId).value;
+            localStorage.setItem(settingId, value);
+        });
+        recalculateAllRows();
+    }
+    
+    function handleRecalculateClick(button) {
+        recalculateAllRows();
+        const originalText = button.innerHTML;
+        button.innerHTML = 'Saved!';
+        button.disabled = true;
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 1500);
+    }
+
+    function recalculateAllRows() {
+        const month = parseInt(document.getElementById("month").value);
+        const year = parseInt(document.getElementById("year").value);
+        const tbody = document.querySelector("#payTable tbody");
+        tbody.querySelectorAll("tr").forEach(row => {
+            const dateCell = row.querySelector('td:first-child');
+            if (dateCell) {
+                const day = new Date(dateCell.textContent).getUTCDate();
+                updateRow(year, month, day);
+            }
+        });
+    }
+
+    function updateExchangeRate() {
+        localStorage.setItem('exchangeRate', document.getElementById('exchangeRate').value);
+        calculateAllTotals();
+    }
+
+    function calculateAllTotals() {
+      const tbody = document.querySelector("#payTable tbody");
+      let cutoff1 = 0, cutoff2 = 0;
+      const exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 1;
+
+      tbody.querySelectorAll("tr").forEach((row) => {
+        const total = parseFloat(row.querySelector(".total").textContent) || 0;
+        const dateString = row.querySelector('td:first-child').textContent;
+        if (!dateString) return;
+        const day = new Date(dateString).getUTCDate();
+        
+        if (day <= 15) cutoff1 += total;
+        else cutoff2 += total;
+      });
+      
+      const applyDeductions = amount => {
+        const fee = amount * 0.15;
+        const vat = fee * 0.12;
+        return amount - fee - vat;
+      }
+
+      const cutoff1USD = applyDeductions(cutoff1);
+      const cutoff2USD = applyDeductions(cutoff2);
+
+      document.getElementById("cutoff1").textContent = cutoff1USD.toFixed(2);
+      document.getElementById("cutoff2").textContent = cutoff2USD.toFixed(2);
+      document.getElementById("cutoff1_php").textContent = (cutoff1USD * exchangeRate).toFixed(2);
+      document.getElementById("cutoff2_php").textContent = (cutoff2USD * exchangeRate).toFixed(2);
+    }
+    
+    function showConfirmationModal() {
+        document.getElementById('confirmationModal').classList.remove('hidden');
+    }
+
+    function hideConfirmationModal() {
+        document.getElementById('confirmationModal').classList.add('hidden');
+    }
+
+    function confirmClearMonthData() {
+        const month = parseInt(document.getElementById("month").value);
+        const year = parseInt(document.getElementById("year").value);
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const key = `paydata-${year}-${month}-${d}`;
+            localStorage.removeItem(key);
+        }
+        
+        hideConfirmationModal();
+        generateCalendar(); // Refresh the view
+    }
+
+    function downloadPayslip(cutoffNumber) {
+        const month = parseInt(document.getElementById("month").value);
+        const year = parseInt(document.getElementById("year").value);
+        const monthName = document.getElementById("month").options[document.getElementById("month").selectedIndex].text;
+        const exchangeRate = parseFloat(document.getElementById('exchangeRate').value) || 1;
+        const employeeName = document.getElementById('employeeName').value || 'Employee';
+        const regularRate = parseFloat(document.getElementById('regularRate').value) || 0;
+        const premiumRate = parseFloat(document.getElementById('premiumRate').value) || 0;
+        const otMultiplier = parseFloat(document.getElementById('otMultiplier').value) || 0;
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        const periodDescription = cutoffNumber === 1 ? `1st - 15th ${monthName} ${year}` : `16th - ${daysInMonth}th ${monthName} ${year}`;
+        let totalRegularHours = 0, totalPremiumHours = 0, totalOTHours = 0;
+
+        document.querySelector("#payTable tbody").querySelectorAll("tr").forEach(row => {
+            const dateString = row.querySelector('td:first-child').textContent;
+            if (!dateString) return;
+            const day = new Date(dateString).getUTCDate();
+            const isInPeriod = (cutoffNumber === 1 && day <= 15) || (cutoffNumber === 2 && day > 15);
+
+            if (isInPeriod) {
+                const inputs = row.querySelectorAll("input[type='time']");
+                const timeIn = inputs[0].value, timeOut = inputs[1].value;
+                const lunchIn = inputs[2].value, lunchOut = inputs[3].value;
+                const otIn = inputs[4].value, otOut = inputs[5].value;
+
+                if (timeIn && timeOut) {
+                    const shiftHours = calculateWorkHours(timeIn, timeOut, lunchIn, lunchOut);
+                    totalRegularHours += shiftHours.regularHours;
+                    totalPremiumHours += shiftHours.premiumHours;
+                }
+                if (otIn && otOut) {
+                    const otHoursData = calculateWorkHours(otIn, otOut, null, null);
+                    totalOTHours += otHoursData.regularHours + otHoursData.premiumHours;
+                }
+            }
+        });
+
+        const grossRegular = totalRegularHours * regularRate;
+        const grossPremium = totalPremiumHours * premiumRate;
+        const grossOT = totalOTHours * regularRate * otMultiplier;
+        const grossTotal = grossRegular + grossPremium + grossOT;
+        const fee = grossTotal * 0.15;
+        const vat = fee * 0.12;
+        const totalDeductions = fee + vat;
+        const netPayUSD = grossTotal - totalDeductions;
+        const netPayPHP = netPayUSD * exchangeRate;
+
+        const payslipHTML = `
+            <html><head><title>Payslip for ${employeeName}</title><script src="https://cdn.tailwindcss.com"><\/script><style>body{font-family:ui-sans-serif,system-ui,sans-serif;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}.no-print{display:none;}}</style></head>
+            <body class="bg-gray-100"><div class="max-w-2xl mx-auto p-8 bg-white my-8 rounded-lg shadow-md">
+                <div class="flex justify-between items-start mb-6 border-b pb-4">
+                    <div><h1 class="text-2xl font-bold text-rose-700">Payslip</h1><h2 class="text-lg font-semibold text-gray-800">${employeeName}</h2></div>
+                    <div class="text-right"><p class="text-sm text-gray-500"><strong>Pay Period:</strong> ${periodDescription}</p><p class="text-sm text-gray-500"><strong>Payment Date:</strong> ${new Date().toLocaleDateString()}</p></div>
+                </div>
+                <div class="grid grid-cols-2 gap-8">
+                    <div><h3 class="font-semibold text-rose-600 border-b mb-2 pb-1">Earnings</h3>
+                        <div class="flex justify-between py-1"><span class="text-gray-600">Regular Pay</span><span>$${grossRegular.toFixed(2)}</span></div>
+                        <div class="flex justify-between py-1"><span class="text-gray-600">Premium Pay</span><span>$${grossPremium.toFixed(2)}</span></div>
+                        <div class="flex justify-between py-1"><span class="text-gray-600">Overtime Pay</span><span>$${grossOT.toFixed(2)}</span></div>
+                        <div class="flex justify-between py-2 mt-2 font-bold border-t"><span class="text-gray-800">Gross Earnings</span><span>$${grossTotal.toFixed(2)}</span></div>
+                    </div>
+                    <div><h3 class="font-semibold text-rose-600 border-b mb-2 pb-1">Deductions</h3>
+                        <div class="flex justify-between py-1"><span class="text-gray-600">Fee (15%)</span><span>$${fee.toFixed(2)}</span></div>
+                        <div class="flex justify-between py-1"><span class="text-gray-600">VAT on Fee (12%)</span><span>$${vat.toFixed(2)}</span></div>
+                        <div class="flex justify-between py-2 mt-2 font-bold border-t"><span class="text-gray-800">Total Deductions</span><span>$${totalDeductions.toFixed(2)}</span></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-8 mt-6 pt-4 border-t">
+                    <div><h3 class="font-semibold text-rose-600 border-b mb-2 pb-1">Hours Summary</h3>
+                        <div class="flex justify-between py-1"><span class="text-gray-600">Regular Hours</span><span>${totalRegularHours.toFixed(2)}</span></div>
+                        <div class="flex justify-between py-1"><span class="text-gray-600">Premium Hours</span><span>${totalPremiumHours.toFixed(2)}</span></div>
+                        <div class="flex justify-between py-1"><span class="text-gray-600">Overtime Hours</span><span>${totalOTHours.toFixed(2)}</span></div>
+                    </div>
+                    <div><h3 class="font-semibold text-rose-600 border-b mb-2 pb-1">Net Pay</h3>
+                        <div class="text-2xl font-bold text-gray-800 mt-2">$${netPayUSD.toFixed(2)}</div>
+                        <div class="text-lg font-semibold text-rose-700">₱${netPayPHP.toFixed(2)}</div>
+                        <p class="text-xs text-gray-400 mt-1">Rate: 1 USD = ${exchangeRate.toFixed(2)} PHP</p>
+                    </div>
+                </div>
+                <div class="text-center mt-8 no-print"><button onclick="window.print()" class="px-6 py-2 bg-rose-500 text-white rounded-md shadow-sm hover:bg-rose-600">Print / Save as PDF</button></div>
+            </div></body></html>`;
+
+        const payslipWindow = window.open('', '_blank');
+        payslipWindow.document.write(payslipHTML);
+        payslipWindow.document.close();
+    }
+  </script>
+</body>
+</html>
+
